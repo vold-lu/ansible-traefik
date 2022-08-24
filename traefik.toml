@@ -6,5 +6,3 @@
     address = ":80"
   [entryPoints.websecure]
     address = ":443"
-  [entryPoints.dashboard]
-    address = ":8080"
