@@ -1,0 +1,91 @@
+---
+- name: Update and upgrade installed packages
+  hosts: proxy
+  become: yes
+  tasks:
+    - apt:
+        upgrade: true
+        update_cache: true
+
+- name: Download Traefik from GitHub.com
+  hosts: proxy
+  become: yes
+  tasks:
+    - name: Download and extract Traefik
+      ansible.builtin.unarchive:
+        src: https://github.com/traefik/traefik/releases/download/v2.8.3/traefik_v2.8.3_linux_amd64.tar.gz
+        dest: /usr/local/bin
+        remote_src: 'True'
+    - name: Apply correct permissions
+      ansible.builtin.file:
+        path: /usr/local/bin/traefik
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Set cap_net_bind_service=+ep
+      community.general.capabilities:
+        path: /usr/local/bin/traefik
+        capability: cap_net_bind_service=+ep
+        state: present
+
+- name: Setup Traefik user
+  hosts: proxy
+  become: yes
+  tasks:
+    - name: Ensure group "traefik" exists with correct gid
+      ansible.builtin.group:
+        name: traefik
+        state: present
+        gid: 321
+    - name: Ensure user "traefik" exists with correct uid
+      ansible.builtin.user:
+        name: traefik
+        group: traefik
+        uid: 321
+        shell: /usr/sbin/nologin
+        create_home: 'False'
+        system: 'True'
+
+- name: Setup directories and configuration files
+  hosts: proxy
+  become: yes
+  tasks:
+    - name: Create /etc/traefik
+      ansible.builtin.file:
+        path: /etc/traefik
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+    - name: Create /etc/traefik/acme
+      ansible.builtin.file:
+        path: /etc/traefik/acme
+        state: directory
+        mode: '0750'
+        owner: traefik
+        group: traefik
+    - name: Copy the Traefik config file
+      ansible.builtin.copy:
+        src: ./traefik.toml
+        dest: /etc/traefik/traefik.toml
+        mode: '640'
+        owner: traefik
+        group: traefik
+
+- name: Configure Systemd
+  hosts: proxy
+  become: yes
+  tasks:
+    - name: Copy the Systemd unit file
+      ansible.builtin.copy:
+        src: ./traefik.service
+        dest: /etc/systemd/system/traefik.service
+        mode: '644'
+        owner: root
+        group: root
+    - name: Start and enable the service
+      ansible.builtin.service:
+        name: traefik.service
+        state: reloaded
+        enabled: true
+        daemon_reload: 'True'
