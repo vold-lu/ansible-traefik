@@ -6,3 +6,7 @@
     address = ":80"
   [entryPoints.websecure]
     address = ":443"
+
+[log]
+  level = "INFO"
+  filePath = "/var/log/traefik.log"

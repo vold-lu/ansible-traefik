@@ -71,6 +71,15 @@
         mode: '640'
         owner: traefik
         group: traefik
+    - name: Create Traefik log file
+      ansible.builtin.file:
+        path: /var/log/traefik.log
+        state: touch
+        mode: '640'
+        owner: traefik
+        group: traefik
+        modification_time: preserve
+        access_time: preserve
 
 - name: Configure Systemd
   hosts: proxy
@@ -86,6 +95,6 @@
     - name: Start and enable the service
       ansible.builtin.service:
         name: traefik.service
-        state: reloaded
+        state: restarted
         enabled: true
         daemon_reload: 'True'
