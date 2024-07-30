@@ -13,7 +13,7 @@
   tasks:
     - name: Download and extract Traefik
       ansible.builtin.unarchive:
-        src: https://github.com/traefik/traefik/releases/download/v3.0.1/traefik_v3.0.1_linux_amd64.tar.gz
+        src: https://github.com/traefik/traefik/releases/download/v3.1.0/traefik_v3.1.0_linux_amd64.tar.gz
         dest: /usr/local/bin
         remote_src: 'True'
     - name: Apply correct permissions
